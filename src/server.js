@@ -17,7 +17,7 @@ import compression from "compression";
 export default class server {
 	constructor ({
 		port = 80,
-		host = "::",
+		host = null,
 		maping = null,
 		middleware = {},
 		orderMiddleware = [],
