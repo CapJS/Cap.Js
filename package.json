@@ -1,7 +1,7 @@
 {
   "name": "capjs_framework",
   "title": "CapJS Framework",
-  "version": "0.0.0",
+  "version": "0.1.0-dev",
   "description": "",
   "main": "lib/cap.js",
   "scripts": {
