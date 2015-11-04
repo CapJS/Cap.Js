@@ -12,6 +12,8 @@ import logger from "./logger.js";
 import express from "express";
 import colors from "colors/safe";
 import i18n from "i18n";
+import compression from "compression";
+import bodyParser from "body-parser";
 
 
 class capjs {
@@ -36,6 +38,13 @@ class capjs {
       policies = [policies];
     }
     this.policies = policies;
+
+    // bodyParser
+    this.app.use(bodyParser.urlencoded({ extended: false }));
+    this.app.use(bodyParser.json());
+
+    // compression
+    this.app.use(compression());
 
     // CHDIR Definido.
     this.chdir = chdir;
