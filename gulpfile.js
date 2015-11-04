@@ -12,13 +12,10 @@ gulp.task("babel", function () {
 		.pipe(gulp.dest("lib"));
 });
 
-gulp.task("copy-img", function () {
-	return gulp.src("assets")
-})
-
 gulp.task("watch", ["babel"], function () {
 	gulp.watch("src/**/*.js",["babel"])
 })
 
+gulp.task("build", ["babel"]);
 
 gulp.task("default", ["watch"]);
