@@ -1,14 +1,14 @@
 {
   "name": "cap.js",
   "title": "CapJS Framework",
-  "version": "0.2.1-dev",
+  "version": "0.2.3-dev",
   "description": "",
   "main": "lib/cap.js",
   "scripts": {
     "build": "gulp babel",
     "build-watch": "babel src/ --out-dir lib/"
   },
-  "author": "",
+  "author": "Jon Dotsoy <hi@jon.soy>",
   "license": "MIT",
   "dependencies": {
     "async": "^1.5.0",
