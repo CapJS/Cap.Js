@@ -4,6 +4,8 @@ import methods from "methods";
 import express from "express";
 import logger from "./logger.js";
 import colors from "colors/safe";
+import async from "async";
+import ms from "ms";
 
 
 
@@ -58,6 +60,64 @@ class mapingRoutes {
 	}
 
 	maping (ObjectStructure) {
+
+		// Config x-powered-by
+		let xPoweredBy = this.capjs.config("express.x-powered-by", "CapJS");
+
+		if (_.isBoolean(xPoweredBy)) {
+			this.app.set("x-powered-by", xPoweredBy);
+		} else
+		if (_.isString(xPoweredBy)) {
+			this.app.set("x-powered-by", false);
+			this.app.use((req, res, next) => {
+				res.header("X-Powered-By", xPoweredBy);
+				return next();
+			});
+		}
+		//End Config x-powered-by
+
+
+		// Cache Control
+		let cacheControl = this.capjs.config("http.cacheControl", ms("7 days"));
+		if (_.isNumber(cacheControl)) {
+			this.app.use((req, res, next) => {
+				res.set("Cache-Control", "public, max-age="+cacheControl);
+				return next();
+			})
+		} else
+		if (_.isString(cacheControl)) {
+			this.app.use((req, res, next) => {
+				res.set("Cache-Control", "public, max-age="+(ms(cacheControl)||cacheControl));
+				return next();
+			});
+		} else
+		if (_.isObject(cacheControl)) {
+			let maxAge = _.get(cacheControl, "maxAge", ms("7 days"));
+			let scope  = _.get(cacheControl, "scope", "public");
+			let noCache = _.get(cacheControl, "noCache", false);
+			let noStore = _.get(cacheControl, "noStore", false);
+			if (noStore == true) {
+				this.app.use((req, res, next) => {
+					res.set("Cache-Control", "no-store");
+					return next();
+				});
+			} else
+			if (noCache == true) {
+				this.app.use((req, res, next) => {
+					res.set("Cache-Control", "no-cache");
+					return next();
+				});
+			} else {
+				this.app.use((req, res, next) => {
+					res.set("Cache-Control", `${scope}, max-age=${ms(maxAge)||maxAge}`);
+					return next();
+				});
+			}
+		}
+		// END Cache-Control
+
+
+
 		_.map(ObjectStructure, (routeConfig, keyRoute) => {
 			// Configuración del path
 			let {method:RouteMethod, path:RoutePath} = this.decodePathCompuest(keyRoute);
@@ -78,6 +138,7 @@ class mapingRoutes {
 					RoutePath = routeConfig.path;
 				}
 			}
+
 
 			// Static Directories
 			if (RouteMethod == "static") {
@@ -141,10 +202,12 @@ class mapingRoutes {
 		controller = _.filter(controller, _.isFunction);
 
 
+		// Resolve Policies
 		if (!_.isArray(policies)) {
 			policies = [policies];
 		}
 
+		// If String Find Policie
 		policies = _.map(policies, (policie) => {
 			if (_.isString(policie)) {
 				this.log("Load Policie:", colors.green(policie));
@@ -153,18 +216,39 @@ class mapingRoutes {
 			return policie;
 		});
 
+
+
 		// Control Policies
 		if (policies.length > 0) {
-			this.log("Load Policies", policies.length,"in", colors.green(pathName), ".");
+			this.log("Load Policies", colors.green(policies.length),"in", colors.green(pathName), ".");
+
 
 			this.app.all(pathName, (req, res, next) => {
-				if (this.resolvePolicies(policies, req, res) == true) {
-					return next();
-				} else {
-					return res.sendStatus(403);
-				}
+				async.parallel(_.map(policies, (policie) => {
+					return (cb) => {
+						return policie(req, res, cb);
+					};
+				}), (err, resuls) => {
+					if (err) {
+						res.sendStatus(403);
+					} else {
+						next();
+					}
+				});
 			});
+
+			// 	if (this.resolvePolicies(policies, req, res) == true) {
+			// 		return next();
+			// 	} else {
+			// 		return res.sendStatus(403);
+			// 	}
+			// });
 		}
+
+
+
+
+
 
 		if (controller.length > 0) {
 			this.log(`Loading ${controller.length} Controller to ${pathName}.`);
