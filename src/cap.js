@@ -158,6 +158,8 @@ class capjs {
 
     // Create Server Express
     let app = new server({
+      "port": this.config("http.port", 80),
+      "host": this.config("http.host", null),
       "capjs": this,
       "maping": this.config("routes", null),
       "behavior": behaviorApp,
