@@ -12,6 +12,8 @@ import colors from "colors/safe";
 import bodyParser from "body-parser";
 import cookieParser from "cookie-parser";
 import compression from "compression";
+import SocketIO from "socket.io";
+import http from "http";
 
 
 export default class server {
@@ -27,6 +29,7 @@ export default class server {
 	} = {}) {
 		this.capjs = capjs;
 		this.app = new express();
+		this.server = http.createServer(this.app);
 		this.port = port;
 		this.host = host;
 		this.behavior = behavior;
@@ -43,6 +46,9 @@ export default class server {
 
 		// compression
 		this.app.use(compression());
+
+		// Implement SocketIO
+		this.io = SocketIO();
 
 		this.loadBehavior();
 		this.loadMiddleware();
@@ -89,7 +95,7 @@ export default class server {
 		if (_.get(args, "[2]", false)===false) {
 		}
 
-		let listener = this.app.listen(...args, function (...argscb) {
+		let listener = this.server.listen(...args, function (...argscb) {
 			let callback = _.last(args);
 			let address = listener.address();
 
