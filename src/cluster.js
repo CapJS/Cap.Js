@@ -82,11 +82,9 @@ class cluster {
 	/*
 	* Abre un servidor para el manejo de los servidores activos.
 	*/
-	listen () {
+	listen (port = 32020) {
 		if (Cluster.isMaster) {
-			let app = new server({
-				port: 32020,
-			});
+			let app = new server({port});
 			let clusterRoute = express.Router();
 			let workerClusteRoute = express.Router();
 
